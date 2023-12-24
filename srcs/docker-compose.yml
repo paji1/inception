@@ -2,6 +2,7 @@ services:
   nginx:
     build:
       context: ./requirements/nginx
+    image: nginx
     container_name: nginx
     restart: always
     networks:
@@ -19,25 +20,87 @@ services:
   wordpress:
     build:
       context: ./requirements/wordpress
+    image: wordpress
+    restart: always
     networks:
       - docker_network
     container_name: wordpress
     env_file:
       - .env
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - wordpress_v:/var/www/html
     
   mariadb:
+    build:
+      context: ./requirements/mariadb
     image: mariadb
     container_name: mariadb
+    restart: always
+    networks:
+      - docker_network
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "mysqladmin", "-uroot", "-p$MYSQL_ROOT_PASSWORD", "ping", "--silent"]
+      interval: 2s
+    volumes:
+      - mariadb_v:/var/lib/mysql
+      
+  redis:
+    build:
+      context: ./requirements/bonus/redis
+    image: redis
+    container_name: redis
+    restart: always
+    networks:
+      - docker_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+
+  adminer:
+    build:
+      context: ./requirements/bonus/adminer
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - "5555:5555"
+    networks:
+      - docker_network
+      
+  static:
+    build:
+      context: ./requirements/bonus/static
+    image: static
+    container_name: static
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - docker_network
+  ftp:
+    build:
+      context: ./requirements/bonus/ftp
+    image: ftp
+    container_name: ftp
+    restart: always
+    ports:
+      - '20-21:20-21'
+      - '40000-40009:40000-40009'
     networks:
       - docker_network
     env_file:
       - .env
     volumes:
-      - mariadb_v:/var/lib/mysql
+      - wordpress_v:/home/$FTP_USER/
+    depends_on:
+      - wordpress
 
 networks:
   docker_network:

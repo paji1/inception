@@ -2,15 +2,12 @@
 
 
 if [ ! -e "/var/lib/mysql/wordpress" ]; then
-	/usr/bin/mariadb -sfu root <<  EOF
-UPDATE mysql.user SET Password=PASSWORD('$MYSQL_ROOT_PASSWORD') WHERE User='root';
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DROP DATABASE IF EXISTS $MYSQL_DATABASE;
-DELETE FROM mysql.db WHERE Db='$MYSQL_USER' OR Db='$MYSQL_USER\\_%';
-FLUSH PRIVILEGES;
-EOF
+	mysql_install_db
+	service mariadb start
+	cat ./secure.in | envsubst | mysql_secure_installation
+
+	cat ./wp.sql | envsubst | /usr/bin/mariadb -uroot -p$MYSQL_ROOT_PASSWORD
+	service mariadb stop
 fi
-mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
 
 exec $@

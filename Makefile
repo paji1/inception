@@ -6,10 +6,9 @@ down:
 	docker-compose -f ./srcs/docker-compose.yml down
 
 clean:
-	@if [ -n "$$(docker volume ls -q)" ]; then \
-		docker volume rm $$(docker volume ls -q); \
-	fi
-	docker container prune -f
+	-docker volume rm $(shell docker volume ls -q); 
+	-docker container prune -f
+	-docker image prune -a -f 
 
 .SILENT: all down 
 .PHONY: down

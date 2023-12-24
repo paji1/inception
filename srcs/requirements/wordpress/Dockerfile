@@ -10,7 +10,7 @@ sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/
 wget -qO - https://packages.sury.org/php/apt.gpg | sudo apt-key add -
 sudo apt update
 
-apt install php8.2 php8.2-curl php8.2-fpm php8.2-bcmath php8.2-gd php8.2-soap php8.2-zip php8.2-curl php8.2-mbstring php8.2-mysqlnd php8.2-gd php8.2-xml php8.2-intl php8.2-zip -y
+apt install php8.2 php8.2-curl php8.2-fpm php8.2-bcmath php8.2-gd php8.2-soap php8.2-zip php8.2-curl php8.2-mbstring php8.2-mysqlnd php8.2-gd php8.2-xml php8.2-intl php8.2-zip php8.2-redis -y
 EOF
 
 WORKDIR /wordpress
@@ -30,6 +30,7 @@ EOF
 # WORKDIR /var/www/html
 # cp ./wp-config-sample.php ./wp-config.php
 COPY ./conf/wp-config.php /var/www/html/wordpress/tmp_conf.php
+RUN chmod 777 /var/www/html/wordpress/tmp_conf.php
 COPY ./conf/www.conf /etc/php/8.2/fpm/pool.d/
 RUN <<EOF
 find . -type d -exec chmod 755 {} \;
@@ -38,8 +39,16 @@ EOF
 
 RUN <<EOF
 apt-get update -y
-apt-get install sed -y
+apt-get install sed curl sendmail -y
 EOF
+
+RUN <<EOF
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+php wp-cli.phar --info
+chmod +x wp-cli.phar
+mv wp-cli.phar /usr/local/bin/wp
+EOF
+
 
 COPY ./tools/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
