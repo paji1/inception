@@ -73,7 +73,7 @@ services:
       - "5555:5555"
     networks:
       - docker_network
-      
+
   static:
     build:
       context: ./requirements/bonus/static
@@ -99,6 +99,18 @@ services:
       - .env
     volumes:
       - wordpress_v:/home/$FTP_USER/
+    depends_on:
+      - wordpress
+  backup:
+    build:
+      context: ./requirements/bonus/backup
+    image: backup
+    container_name: backup
+    restart: always
+    networks:
+      - docker_network
+    volumes:
+      - wordpress_v:/var/www/html
     depends_on:
       - wordpress
 
