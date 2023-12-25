@@ -7,7 +7,8 @@ CONFIG_PATH_TMP="/var/www/html/wordpress/tmp_conf.php"
 if [ ! -f $CONFIG_PATH ]; then
 	cat $CONFIG_PATH_TMP | envsubst > $CONFIG_PATH
 	wp --allow-root core install  --url=$WORDPRESS_URL --title=$WORDPRESS_DB_NAME --admin_user=$WORDPRESS_DB_USER  --admin_password=$WORDPRESS_DB_PASSWORD  --admin_email=$WORDPRESS_EMAIL
-	wp --allow-root plugin install redis-cache --activate
+	wp --allow-root user create $SECOND_USER_WORDPRESS $SECOND_USER_WORDPRESS_EMAIL   --role=$SECOND_USER_WORDPRESS_ROLE --user_pass=$SECOND_USER_WORDPRESS_PASS
+	wp --allow-root plugin install redis-cache --activate 
 	wp --allow-root redis enable
 fi
 
